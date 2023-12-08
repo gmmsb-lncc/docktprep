@@ -6,6 +6,8 @@ from biopandas.pdb import PandasPdb
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
+
+
 def pdb_exist(pathName):
     return os.path.isfile(pathName)
 
@@ -19,18 +21,6 @@ def split_file(pathName):
     hetatms_split = hetatms.groupby("residue_name")
                         
     return atoms, hetatms_split
-
-def add_hydrogens(hetatms_df):
-
-    mol_block = PandasPdb().to_pdb(hetatms_df)
-    mol = Chem.MolFromPDBBlock(mol_block)
-
-    mol_with_hydrogens = AllChem.AddHs(mol, addCoords=True, addResidueInfo=True)
-
-    # Converter o molécula com hidrogênios de volta para um DataFrame
-    hetatms_with_df = PandasPdb().pdb_to_df(mol_with_hydrogens)
-
-    return hetatms_with_hydrogens_df
 
 def save_mol_as_pdb(mol, output_file):
     pdb_block = Chem.MolToPDBBlock(mol)
@@ -69,6 +59,10 @@ def main():
 
     atoms_df, hetatms_df = split_file(moleculePath)
 
+    print(atoms_df)
+
+    print(f"Adding Hydrogens to hetatms...\n")
+
     for residue_name, group_hetatm in hetatms_df:
         if group_hetatm.empty:
             continue
@@ -76,7 +70,12 @@ def main():
         mol_with_hydrogens = add_hydrogens(group_hetatm)
         save_mol_as_pdb(mol_with_hydrogens, f"{residue_name}_hs.pdb")
     
+    print(f"Done!\n")
+    #
+    print(f"Adding Hydrogens to atms...\n")  
 
+    atms_with_hydrogens = add_hydrogens(atoms_df)
+    save_mol_as_pdb(atms_with_hydrogens, f"{residue_name}_hs.pdb")
 
 if __name__ == "__main__":
     main()
