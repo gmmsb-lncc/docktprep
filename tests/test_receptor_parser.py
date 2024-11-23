@@ -1,10 +1,9 @@
 import io
 import tempfile
-from unittest.mock import Mock
 
 import pytest
 
-from docktprep.receptor_parser import PDBSanitizer, PDBSanitizerFactory, Receptor
+from docktprep.receptor_parser import PDBSanitizerFactory, Receptor
 
 
 def test_pdb_receptor_open_file_stream():

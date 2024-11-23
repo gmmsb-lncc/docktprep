@@ -1,6 +1,5 @@
 """Configure application logging."""
 
-import datetime
 import logging
 
 

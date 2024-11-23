@@ -123,10 +123,9 @@ class Receptor:
         to a new `current_file_stream`. Logs any warnings.
         """
         parser = self.get_biopython_parser()
-        file_io = self.get_biopython_file_io(self.file_ext.strip("."))
         file_id = os.path.splitext(os.path.basename(self.file))[0]
-        warnings.simplefilter("always")
 
+        warnings.simplefilter("always")
         with warnings.catch_warnings(record=True) as warns:
             structure = parser.get_structure(file_id, self.current_file_stream)
 
@@ -137,6 +136,7 @@ class Receptor:
         self.close_file_stream()  # close the original file stream
         self.current_file_stream = io.StringIO()
 
+        file_io = self.get_biopython_file_io(self.file_ext.strip("."))
         file_io.set_structure(structure)
         sanitizer = self.sanitizer.create_sanitizer(structure)
         file_io.save(self.current_file_stream, write_end=True, select=sanitizer)
