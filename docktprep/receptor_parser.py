@@ -134,8 +134,9 @@ class Receptor:
             if warn.category == PDBExceptions.PDBConstructionWarning:
                 logging.warning(f"{self.file}: {str(warn.message).split("\n")[0]}")
 
-        self.close_file_stream()
+        self.close_file_stream()  # close the original file stream
         self.current_file_stream = io.StringIO()
+
         file_io.set_structure(structure)
         sanitizer = self.sanitizer.create_sanitizer(structure)
         file_io.save(self.current_file_stream, write_end=True, select=sanitizer)
