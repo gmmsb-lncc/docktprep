@@ -1,5 +1,6 @@
 import io
 import tempfile
+from copy import copy
 
 import pytest
 
@@ -48,10 +49,11 @@ def test_write_file_stream():
     receptor = Receptor("tests/data/9ins.pdb")
     receptor.sanitize_file()
     with tempfile.NamedTemporaryFile(delete=True) as tmp:
-        receptor.write_file_stream(tmp.name)
+        current_file_stream = copy(receptor.current_file_stream)
+        receptor.write_and_close_file_stream(tmp.name)
         with open(tmp.name, "r") as f:
-            receptor.current_file_stream.seek(0)
-            assert f.read() == receptor.current_file_stream.read()
+            current_file_stream.seek(0)
+            assert f.read() == current_file_stream.read()
 
     receptor.close_file_stream()
 
@@ -67,7 +69,17 @@ def test_sanitize_and_fix_structure_does_not_raise():
     receptor.sanitize_file()
     receptor.fix_structure(fix_ops)
     with tempfile.NamedTemporaryFile(delete=True) as tmp:
-        receptor.write_file_stream(tmp.name)
+        receptor.write_and_close_file_stream(tmp.name)
         with open(tmp.name, "r") as f:
             assert f.read()
     receptor.close_file_stream()
+
+
+# def test_sanitize_file_adds_seqres_to_stream():
+#     receptor = Receptor("tests/data/1az5.pdb")
+#     seqres = receptor.get_seqres_from_stream()
+#     assert seqres
+#     receptor.current_file_stream.seek(0)
+#     receptor.sanitize_file()  # should add SEQRES records to the top of the stream
+#     receptor.current_file_stream.seek(0)
+#     assert "SEQRES" in receptor.current_file_stream.getvalue()

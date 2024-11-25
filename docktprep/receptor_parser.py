@@ -99,10 +99,29 @@ class Receptor:
     def close_file_stream(self):
         self.current_file_stream.close()
 
-    def write_file_stream(self, file: str):
+    def write_and_close_file_stream(self, file: str):
         self.current_file_stream.seek(0)
         with open(file, "w") as f:
             f.write(self.current_file_stream.read())
+        self.close_file_stream()
+
+    def get_seqres_from_stream(self):
+        self.current_file_stream.seek(0)
+        seqres = []
+        for line in self.current_file_stream:
+            if line.startswith("SEQRES"):
+                seqres.append(line)
+        return seqres
+
+    def add_seqres_to_stream(self, seqres: list[str]):
+        """Adds SEQRES records to the beginning of the current file stream."""
+        seqres_str = "".join(seqres)
+
+        self.current_file_stream.seek(0)
+        original_content = self.current_file_stream.read()
+
+        self.current_file_stream = io.StringIO()
+        self.current_file_stream.write(seqres_str + original_content)
 
     def get_biopython_parser(self):
         if self.file_ext == ".pdb":
@@ -134,6 +153,7 @@ class Receptor:
         Catches common PDB exceptions and errors. Save the sanitized file
         to a new `current_file_stream`. Logs any warnings.
         """
+        seqres = self.get_seqres_from_stream()
         parser = self.get_biopython_parser()
         file_id = os.path.splitext(os.path.basename(self.file))[0]
         self.current_file_stream.seek(0)
@@ -153,8 +173,12 @@ class Receptor:
         file_io.set_structure(structure)
         sanitizer = self.sanitizer.create_sanitizer(structure)
         file_io.save(self.current_file_stream, write_end=True, select=sanitizer)
+        # add SEQRES records to the beginning of the file, since bioptyhon excludes
+        # the header info
+        # self.add_seqres_to_stream(seqres)
 
     def fix_structure(self, fix_ops: list[PDBFixerOperation]) -> None:
+        self.current_file_stream.seek(0)
         self.current_file_stream.seek(0)
         fixer_parser = self.get_pdbfixer_parser()
         fixer = fixer_parser(pdbfile=self.current_file_stream)
