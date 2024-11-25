@@ -1,7 +1,6 @@
 import logging
 from typing import Protocol
 
-from openmm.app import PDBFile
 from pdbfixer import PDBFixer
 
 __all__ = [
@@ -83,7 +82,7 @@ class AddMissingResidues:
     def fix(self, fixer: PDBFixer):
         fixer.findMissingResidues()
         if not fixer.missingResidues:
-            logging.info("No missing residues found.")
+            logging.info("No missing residues or no SEQRES records found.")
             return fixer
 
         for _, resi in fixer.missingResidues.items():

@@ -5,6 +5,10 @@ import warnings
 
 from Bio.PDB import PDBIO, PDBExceptions, PDBParser, Structure
 from Bio.PDB.PDBIO import Select
+from openmm.app import PDBFile
+from pdbfixer import PDBFixer
+
+from .pdbfixer_operations import PDBFixerOperation
 
 
 class PDBSanitizer(Select):
@@ -124,6 +128,7 @@ class Receptor:
         """
         parser = self.get_biopython_parser()
         file_id = os.path.splitext(os.path.basename(self.file))[0]
+        self.current_file_stream.seek(0)
 
         with warnings.catch_warnings(record=True) as warns:
             warnings.simplefilter("always")
@@ -140,3 +145,13 @@ class Receptor:
         file_io.set_structure(structure)
         sanitizer = self.sanitizer.create_sanitizer(structure)
         file_io.save(self.current_file_stream, write_end=True, select=sanitizer)
+
+    def fix_structure(self, fix_ops: list[PDBFixerOperation]) -> None:
+        self.current_file_stream.seek(0)
+        fixer = PDBFixer(pdbfile=self.current_file_stream)
+        for op in fix_ops:
+            fixer = op.fix(fixer)
+
+        self.close_file_stream()  # close the original file stream
+        self.current_file_stream = io.StringIO()
+        PDBFile.writeFile(fixer.topology, fixer.positions, self.current_file_stream)

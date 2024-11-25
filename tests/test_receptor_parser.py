@@ -3,6 +3,7 @@ import tempfile
 
 import pytest
 
+from docktprep.pdbfixer_operations import *
 from docktprep.receptor_parser import PDBSanitizerFactory, Receptor
 
 
@@ -52,4 +53,22 @@ def test_write_file_stream():
             receptor.current_file_stream.seek(0)
             assert f.read() == receptor.current_file_stream.read()
 
+    receptor.close_file_stream()
+
+
+def test_sanitize_and_fix_structure_does_not_raise():
+    receptor = Receptor("tests/data/1az5.pdb")
+    fix_ops = [
+        ReplaceNonStdResidues(),
+        AddMissingHeavyAtoms(),
+        AddMissingResidues(),
+        AddMissingHydrogens(),
+    ]
+    receptor.sanitize_file()
+    receptor.fix_structure(fix_ops)
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        receptor.write_file_stream(tmp.name)
+        print(tmp.name)
+        with open(tmp.name, "r") as f:
+            assert f.read()
     receptor.close_file_stream()
