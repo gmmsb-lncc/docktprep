@@ -7,6 +7,7 @@ channels:
 dependencies:
   - appnope=0.1.4=pyhd8ed1ab_0
   - asttokens=2.4.1=pyhd8ed1ab_0
+  - biopython=1.84=py312h7e5086c_0
   - bzip2=1.0.8=h80987f9_6
   - ca-certificates=2024.9.24=hca03da5_0
   - colorama=0.4.6=py312hca03da5_0
