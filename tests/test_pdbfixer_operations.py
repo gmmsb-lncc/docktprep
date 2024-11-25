@@ -39,3 +39,10 @@ def test_adds_missing_residues():
     fixer = add_missing.fix(fixer)
     fixer.findMissingResidues()
     assert not fixer.missingResidues
+
+
+def test_add_missing_hydrogens_does_not_raise():
+    fixer = PDBFixer("tests/data/1az5.pdb")
+    add_missing_hs = AddMissingHydrogens()
+    fixer = add_missing_hs.fix(fixer)
+    assert fixer

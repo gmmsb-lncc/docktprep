@@ -9,6 +9,7 @@ __all__ = [
     "ReplaceNonStdResidues",
     "AddMissingHeavyAtoms",
     "AddMissingResidues",
+    "AddMissingHydrogens",
 ]
 
 
@@ -93,4 +94,16 @@ class AddMissingResidues:
         fixer.missingAtoms = {}
         fixer.missingTerminals = {}
         fixer.addMissingAtoms()
+        return fixer
+
+
+class AddMissingHydrogens:
+    """Adds missing hydrogen atoms to the structure."""
+
+    def __init__(self, ph: float = 7.0):
+        self.ph = ph
+
+    def fix(self, fixer: PDBFixer):
+        logging.info(f"Adding missing hydrogen atoms using pH {self.ph}.")
+        fixer.addMissingHydrogens(self.ph)
         return fixer
