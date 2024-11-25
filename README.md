@@ -2,7 +2,7 @@
 
 > This is a work in progress and the code is not yet stable.
   
- Create DockThor input files from PDB, mmCIF or MOL2 formats. Prepare and fix common issues in the PDB files.
+ Create DockThor input files from PDB, mmCIF and MOL2 formats. Prepare and fix common issues in the PDB files.
 
  Accepted input formats:
  - Receptor: PDB, PDBx/mmCIF ⏳.
