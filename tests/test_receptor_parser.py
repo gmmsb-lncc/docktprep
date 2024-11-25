@@ -66,9 +66,8 @@ def test_sanitize_and_fix_structure_does_not_raise():
     ]
     receptor.sanitize_file()
     receptor.fix_structure(fix_ops)
-    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+    with tempfile.NamedTemporaryFile(delete=True) as tmp:
         receptor.write_file_stream(tmp.name)
-        print(tmp.name)
         with open(tmp.name, "r") as f:
             assert f.read()
     receptor.close_file_stream()

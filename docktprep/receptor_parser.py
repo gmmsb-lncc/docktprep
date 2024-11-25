@@ -112,6 +112,14 @@ class Receptor:
             logging.error(e)
             raise ValueError(e)
 
+    def get_pdbfixer_parser(self):
+        if self.file_ext == ".pdb":
+            return PDBFixer
+        else:
+            e = f"Unsupported file extension: {self.file_ext}"
+            logging.error(e)
+            raise ValueError(e)
+
     def get_biopython_file_io(self, output_fmt: str = ""):
         if output_fmt == "pdb":
             return PDBIO()
@@ -148,7 +156,8 @@ class Receptor:
 
     def fix_structure(self, fix_ops: list[PDBFixerOperation]) -> None:
         self.current_file_stream.seek(0)
-        fixer = PDBFixer(pdbfile=self.current_file_stream)
+        fixer_parser = self.get_pdbfixer_parser()
+        fixer = fixer_parser(pdbfile=self.current_file_stream)
         for op in fix_ops:
             fixer = op.fix(fixer)
 
