@@ -13,3 +13,29 @@ def test_no_std_residues_replace():
     fixer = replace.fix(fixer)
     fixer.findNonstandardResidues()
     assert not fixer.nonstandardResidues
+
+
+def test_adds_missing_heavy_atoms():
+    fixer = PDBFixer("tests/data/1az5.pdb")
+    fixer.missingResidues = []
+    fixer.findMissingAtoms()
+    assert fixer.missingAtoms
+    # assert fixer.missingTerminals
+
+    add_missing = AddMissingHeavyAtoms()
+    fixer = add_missing.fix(fixer)
+    fixer.findMissingAtoms()
+    assert not fixer.missingAtoms
+    assert not fixer.missingTerminals
+
+
+def test_adds_missing_residues():
+    fixer = PDBFixer("tests/data/1az5.pdb")
+    fixer.missingResidues = {}
+    fixer.findMissingResidues()
+    assert fixer.missingResidues
+
+    add_missing = AddMissingResidues()
+    fixer = add_missing.fix(fixer)
+    fixer.findMissingResidues()
+    assert not fixer.missingResidues
