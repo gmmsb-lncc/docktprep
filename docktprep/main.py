@@ -22,7 +22,7 @@ def main(args):
     if args.add_missing_atoms:
         fixer_ops.append(AddMissingHeavyAtoms())
     if args.add_hydrogens:
-        fixer_ops.append(AddMissingHydrogens(ph=args.receptor_pH))
+        fixer_ops.append(AddMissingHydrogens(ph=args.pH))
 
     receptor.sanitize_file()
     receptor.fix_structure(fixer_ops)
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         help="Add missing hydrogen atoms to the structure using the specified pH.",
     )
     receptor_operations.add_argument(
-        "--receptor-pH",
+        "--pH",
         type=float,
         default=7.0,
         help="pH value for adding missing hydrogen atoms to the receptor structure.",
