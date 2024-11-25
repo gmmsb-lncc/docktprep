@@ -125,8 +125,8 @@ class Receptor:
         parser = self.get_biopython_parser()
         file_id = os.path.splitext(os.path.basename(self.file))[0]
 
-        warnings.simplefilter("always")
         with warnings.catch_warnings(record=True) as warns:
+            warnings.simplefilter("always")
             structure = parser.get_structure(file_id, self.current_file_stream)
 
         for warn in warns:
