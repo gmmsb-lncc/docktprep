@@ -26,7 +26,13 @@ Features originally implemented in ¹[Biopython](https://biopython.org/) and ²[
 
 To install the application as a command-line tool, you'll need [conda](https://docs.anaconda.com/miniconda/install/). 
 
-First, create a new conda environment from the `environment.yml` file:
+Clone the repository:
+```bash
+git clone https://github.com/gmmsb-lncc/docktprep.git
+cd docktprep
+```
+
+Create a new conda environment from the `environment.yml` file:
 ```bash
 conda env create --file environment.yml --prefix ./venv/
 ```
