@@ -42,6 +42,11 @@ You will always need to activate the environment before running the application:
 conda activate ./venv/
 ```
 
+Install the application:
+```bash
+python -m pip install .
+```
+
 That's it. For a complete list of options, run:
 ```bash
 docktprep --help
