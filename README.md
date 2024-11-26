@@ -22,31 +22,36 @@ Features:
 
 Features originally implemented in ¹[Biopython](https://biopython.org/) and ²[PDBFixer](https://github.com/openmm/pdbfixer).
 
-## Installation
+## Installation and usage as a command-line tool
 
+To install the application as a command-line tool, you'll need [conda](https://docs.anaconda.com/miniconda/install/). 
+
+First, create a new conda environment from the `environment.yml` file:
 ```bash
-python -m pip install docktprep
+conda env create --file environment.yml --prefix ./venv/
 ```
 
-## Usage
+You will always need to activate the environment before running the application:
+```bash
+conda activate ./venv/
+```
 
-For a complete list of options, run:
+That's it. For a complete list of options, run:
 ```bash
 docktprep --help
 ```
 
 ## Development setup
+Follow the instructions below to set up the development environment.
 
 ### Installation
 Clone the repository and install the dependencies using [conda](https://docs.anaconda.com/miniconda/install/).
 
 ```bash
-# create a new conda environment
-conda create --prefix ./venv/ python=3.12
+# create a new conda environment from the environment.yml file
+conda env create --file environment.yml --prefix ./venv/
 conda activate ./venv/
 
-# install the dependencies from .yml file
-conda env update --file environment.yml
 ```
 
 ### Run tests

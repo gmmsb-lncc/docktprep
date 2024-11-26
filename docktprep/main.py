@@ -7,7 +7,9 @@ from docktprep.receptor_parser import PDBSanitizerFactory, Receptor
 from .logs import configure_logging
 
 
-def main(args):
+def main():
+    args = configure_argparser()
+    configure_logging(args.log_output)
     sanitizer = PDBSanitizerFactory(model_id=args.select_model)
     receptor = Receptor(
         args.receptor,
@@ -29,7 +31,7 @@ def main(args):
     receptor.write_and_close_file_stream(args.output)
 
 
-if __name__ == "__main__":
+def configure_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="DockTPrep: Create DockThor input files from PDB, mmCIF or MOL2 formats.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -101,5 +103,9 @@ if __name__ == "__main__":
         if args.log_output is None
         else args.log_output
     )
-    configure_logging(output_file=log_output_file)
-    main(args)
+    args.log_output = log_output_file
+    return args
+
+
+if __name__ == "__main__":
+    main()

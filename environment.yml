@@ -1,4 +1,4 @@
-name: /Users/mpds/python/docktprep/venv
+name: venv
 channels:
   - defaults
   - conda-forge
@@ -83,4 +83,3 @@ dependencies:
   - zeromq=4.3.5=h9f5b81c_6
   - zipp=3.21.0=pyhd8ed1ab_0
   - zlib=1.2.13=hfb2fe0b_6
-prefix: /Users/mpds/python/docktprep/venv
