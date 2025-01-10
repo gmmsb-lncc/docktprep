@@ -127,24 +127,6 @@ class Receptor:
             f.write(self.current_file_stream.read())
         self.close_file_stream()
 
-    def get_seqres_from_stream(self):
-        self.current_file_stream.seek(0)
-        seqres = []
-        for line in self.current_file_stream:
-            if line.startswith("SEQRES"):
-                seqres.append(line)
-        return seqres
-
-    def add_seqres_to_stream(self, seqres: list[str]):
-        """Adds SEQRES records to the beginning of the current file stream."""
-        seqres_str = "".join(seqres)
-
-        self.current_file_stream.seek(0)
-        original_content = self.current_file_stream.read()
-
-        self.current_file_stream = io.StringIO()
-        self.current_file_stream.write(seqres_str + original_content)
-
     def get_biopython_parser(self):
         if self.file_ext == ".pdb":
             return PDBParser(PERMISSIVE=True, QUIET=False)
@@ -187,15 +169,3 @@ class Receptor:
         file_io.set_structure(structure)
         sanitizer = self.sanitizer.create_sanitizer(structure)
         file_io.save(self.current_file_stream, write_end=True, select=sanitizer)
-
-    # def fix_structure(self, fix_ops: list[PDBFixerOperation]) -> None:
-    #     self.current_file_stream.seek(0)
-    #     self.current_file_stream.seek(0)
-    #     fixer_parser = self.get_pdbfixer_parser()
-    #     fixer = fixer_parser(pdbfile=self.current_file_stream)
-    #     for op in fix_ops:
-    #         fixer = op.fix(fixer)
-
-    #     self.close_file_stream()  # close the original file stream
-    #     self.current_file_stream = io.StringIO()
-    #     PDBFile.writeFile(fixer.topology, fixer.positions, self.current_file_stream)
