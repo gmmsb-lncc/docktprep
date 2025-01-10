@@ -16,7 +16,7 @@ class PDBSanitizer(Select):
         remove_water: bool = True,
         **kwargs,
     ) -> None:
-        """BioPython Select class to sanitize PDB files.
+        """Biopython Select class to sanitize PDB files.
 
         Parameters
         ----------
