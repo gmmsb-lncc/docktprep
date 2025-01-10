@@ -1,7 +1,6 @@
 import argparse
 import os
 
-from docktprep.pdbfixer_operations import *
 from docktprep.receptor_parser import PDBSanitizerFactory, Receptor
 
 from .logs import configure_logging
@@ -16,34 +15,24 @@ def main():
         sanitizer=sanitizer,
     )
 
-    fixer_ops = []
-    if args.add_missing_residues:
-        fixer_ops.append(AddMissingResidues())
-    if args.replace_non_standard:
-        fixer_ops.append(ReplaceNonStdResidues())
-    if args.add_missing_atoms:
-        fixer_ops.append(AddMissingHeavyAtoms())
-    if args.add_hydrogens:
-        fixer_ops.append(AddMissingHydrogens(ph=args.pH))
-
     receptor.sanitize_file()
-    receptor.fix_structure(fixer_ops)
     receptor.write_and_close_file_stream(args.output)
 
 
 def configure_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="DockTPrep: Create DockThor input files from PDB, mmCIF or MOL2 formats.",
+        description="DockTPrep: Prepare protein-ligand structures and create DockThor input files.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "-r",
         "--receptor",
-        help="Receptor file in PDB or mmCIF format.",
+        help="Receptor file in PDB format.",
         type=str,
         required=True,
     )
     parser.add_argument(
+        "-o",
         "--output",
         help="Output file name to save the prepared structure.",
         type=str,
@@ -56,6 +45,7 @@ def configure_argparser() -> argparse.ArgumentParser:
         default=None,
     )
     receptor_operations = parser.add_argument_group("Receptor options")
+
     receptor_operations.add_argument(
         "--select-model",
         metavar="MODEL_IDX",
@@ -63,38 +53,6 @@ def configure_argparser() -> argparse.ArgumentParser:
         default=0,
         help="Select a model from the input file, in case of multiple models.",
     )
-    # receptor_operations.add_argument(
-    #     "--convert-to-pdbx",
-    #     action="store_true",
-    #     help="Convert receptor input file to PDBx/mmCIF format.",
-    # )
-    receptor_operations.add_argument(
-        "--replace-non-standard",
-        action="store_true",
-        help="Replace non-standard residues with their standard counterparts.",
-    )
-    receptor_operations.add_argument(
-        "--add-missing-atoms",
-        action="store_true",
-        help="Add missing heavy atoms to the structure.",
-    )
-    receptor_operations.add_argument(
-        "--add-missing-residues",
-        action="store_true",
-        help="Add missing residues to the structure based on SEQRES records.",
-    )
-    receptor_operations.add_argument(
-        "--add-hydrogens",
-        action="store_true",
-        help="Add missing hydrogen atoms to the structure using the specified pH.",
-    )
-    receptor_operations.add_argument(
-        "--pH",
-        type=float,
-        default=7.0,
-        help="pH value for adding missing hydrogen atoms to the receptor structure.",
-    )
-
     args = parser.parse_args()
 
     #

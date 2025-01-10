@@ -5,23 +5,33 @@ import warnings
 
 from Bio.PDB import PDBIO, PDBExceptions, PDBParser, Structure
 from Bio.PDB.PDBIO import Select
-from openmm.app import PDBFile
-from pdbfixer import PDBFixer
-
-from .pdbfixer_operations import PDBFixerOperation
 
 
 class PDBSanitizer(Select):
-    def __init__(self, model_id) -> None:
-        """Select objects from a PDB structure before writing.
+    def __init__(
+        self,
+        model_id: int = 0,
+        remove_disorder: bool = True,
+        remove_hetresi: bool = True,
+        remove_water: bool = True,
+        **kwargs,
+    ) -> None:
+        """BioPython Select class to sanitize PDB files.
 
         Parameters
         ----------
         model_id : int
-            Model ID to select, by default 0
+            model id to select (default: 0)
+        remove_disorder : bool
+            remove disordered atoms (default: True)
+        remove_hetatms : bool
+            remove HETATM atoms (default: True)
         """
         super().__init__()
         self.model_id = model_id
+        self.remove_disorder = remove_disorder
+        self.remove_hetresi = remove_hetresi
+        self.remove_water = remove_water
 
     def setup_structure(self, structure: Structure):
         """Setup the structure and collect disordered atoms."""
@@ -58,20 +68,32 @@ class PDBSanitizer(Select):
     def accept_atom(self, atom):
         """If atom is disordered, select the highest occupancy atom."""
         reject_ids = self.disordered_atoms_to_reject_by_occupancy()
-        if atom.get_serial_number() in reject_ids:
+        if atom.get_serial_number() in reject_ids and self.remove_disorder:
             logging.info(
                 f"Ignoring lower occupancy atom ({atom.get_serial_number()} {atom.get_name()})"
+            )
+            return False
+
+        if atom.get_parent().id[0] == "W" and self.remove_water:
+            logging.info(
+                f"Removing WATER atom ({atom.get_serial_number()} {atom.get_name()})"
+            )
+            return False
+
+        if "H_" in atom.get_parent().id[0] and self.remove_hetresi:
+            logging.info(
+                f"Removing HETATM atom ({atom.get_serial_number()} {atom.get_name()})"
             )
             return False
         return True
 
 
 class PDBSanitizerFactory:
-    def __init__(self, model_id: int = 0):
-        self.model_id = model_id
+    def __init__(self, **kwargs) -> None:
+        self.kwargs = kwargs
 
     def create_sanitizer(self, structure: Structure) -> PDBSanitizer:
-        sanitizer = PDBSanitizer(model_id=self.model_id)
+        sanitizer = PDBSanitizer(**self.kwargs)
         sanitizer.setup_structure(structure)
         return sanitizer
 
@@ -131,14 +153,6 @@ class Receptor:
             logging.error(e)
             raise ValueError(e)
 
-    def get_pdbfixer_parser(self):
-        if self.file_ext == ".pdb":
-            return PDBFixer
-        else:
-            e = f"Unsupported file extension: {self.file_ext}"
-            logging.error(e)
-            raise ValueError(e)
-
     def get_biopython_file_io(self, output_fmt: str = ""):
         if output_fmt == "pdb":
             return PDBIO()
@@ -173,18 +187,15 @@ class Receptor:
         file_io.set_structure(structure)
         sanitizer = self.sanitizer.create_sanitizer(structure)
         file_io.save(self.current_file_stream, write_end=True, select=sanitizer)
-        # add SEQRES records to the beginning of the file, since bioptyhon excludes
-        # the header info
-        # self.add_seqres_to_stream(seqres)
 
-    def fix_structure(self, fix_ops: list[PDBFixerOperation]) -> None:
-        self.current_file_stream.seek(0)
-        self.current_file_stream.seek(0)
-        fixer_parser = self.get_pdbfixer_parser()
-        fixer = fixer_parser(pdbfile=self.current_file_stream)
-        for op in fix_ops:
-            fixer = op.fix(fixer)
+    # def fix_structure(self, fix_ops: list[PDBFixerOperation]) -> None:
+    #     self.current_file_stream.seek(0)
+    #     self.current_file_stream.seek(0)
+    #     fixer_parser = self.get_pdbfixer_parser()
+    #     fixer = fixer_parser(pdbfile=self.current_file_stream)
+    #     for op in fix_ops:
+    #         fixer = op.fix(fixer)
 
-        self.close_file_stream()  # close the original file stream
-        self.current_file_stream = io.StringIO()
-        PDBFile.writeFile(fixer.topology, fixer.positions, self.current_file_stream)
+    #     self.close_file_stream()  # close the original file stream
+    #     self.current_file_stream = io.StringIO()
+    #     PDBFile.writeFile(fixer.topology, fixer.positions, self.current_file_stream)
