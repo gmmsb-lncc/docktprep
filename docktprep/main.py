@@ -8,8 +8,15 @@ from .logs import configure_logging
 
 def main():
     args = configure_argparser()
-    configure_logging(args.log_output)
-    sanitizer = PDBSanitizerFactory(model_id=args.select_model)
+    configure_logging(args.log_file)
+
+    # receptor parsing
+    sanitizer = PDBSanitizerFactory(
+        model_id=args.sel_model,
+        remove_hetresi=args.remove_hetresi,
+        remove_water=args.remove_water,
+    )
+
     receptor = Receptor(
         args.receptor,
         sanitizer=sanitizer,
@@ -39,29 +46,33 @@ def configure_argparser() -> argparse.ArgumentParser:
         required=True,
     )
     parser.add_argument(
-        "--log-output",
+        "--log-file",
         type=str,
         help="Output file for logging.",
         default=None,
     )
-    receptor_operations = parser.add_argument_group("Receptor options")
+    receptor_operations = parser.add_argument_group("receptor options")
 
     receptor_operations.add_argument(
-        "--select-model",
-        metavar="MODEL_IDX",
+        "--remove-hetresi",
+        action="store_true",
+        help="Remove HETATM records.",
+    )
+
+    receptor_operations.add_argument(
+        "--remove-water",
+        action="store_true",
+        help="Remove water molecules.",
+    )
+
+    receptor_operations.add_argument(
+        "--sel-model",
         type=int,
         default=0,
-        help="Select a model from the input file, in case of multiple models.",
+        help="Select a model from the input file using its index, in case of multiple models.",
     )
-    args = parser.parse_args()
 
-    #
-    log_output_file = (
-        f"docktprep_{os.path.basename(args.receptor)}.log"
-        if args.log_output is None
-        else args.log_output
-    )
-    args.log_output = log_output_file
+    args = parser.parse_args()
     return args
 
 
