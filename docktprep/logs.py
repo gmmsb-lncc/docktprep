@@ -9,7 +9,7 @@ def configure_logging(
     """Configure application logging."""
     logging.basicConfig(
         filename=output_file,
-        filemode="a",
+        filemode="w",
         level=level,
         format="%(asctime)s: %(levelname)s: %(message)s",
     )
