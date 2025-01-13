@@ -3,6 +3,7 @@ import tempfile
 from copy import copy
 
 import pytest
+
 from docktprep.receptor_parser import PDBSanitizerFactory, Receptor
 
 
@@ -54,5 +55,3 @@ def test_write_file_stream():
             assert f.read() == current_file_stream.read()
 
     receptor.close_file_stream()
-
-

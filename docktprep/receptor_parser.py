@@ -94,7 +94,7 @@ class PDBSanitizerFactory:
 
     def create_sanitizer(self, structure: Structure) -> PDBSanitizer:
         sanitizer = PDBSanitizer(**self.kwargs)
-        sanitizer.setup_structure(structure)
+        sanitizer.setup_structure(structure)  # required logic to setup the sanitizer
         return sanitizer
 
 
@@ -149,7 +149,6 @@ class Receptor:
         Catches common PDB exceptions and errors. Save the sanitized file
         to a new `current_file_stream`. Logs any warnings.
         """
-        seqres = self.get_seqres_from_stream()
         parser = self.get_biopython_parser()
         file_id = os.path.splitext(os.path.basename(self.file))[0]
         self.current_file_stream.seek(0)
