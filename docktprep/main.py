@@ -1,6 +1,7 @@
 import argparse
 import os
 
+from docktprep.modeller_operations import AddMissingAtomsOperation, ModellerOperation
 from docktprep.receptor_parser import PDBSanitizerFactory, Receptor
 
 from .logs import configure_logging
@@ -21,8 +22,17 @@ def main():
         args.receptor,
         sanitizer=sanitizer,
     )
-
     receptor.sanitize_file()
+
+    # modeller operations
+    mdls = list()
+    if args.add_missing_atoms:
+        mdls.append(AddMissingAtomsOperation())
+
+    for mdl in mdls:
+        mdl.run_modeller(receptor)
+
+    # write receptor to output file
     receptor.write_and_close_file_stream(args.output)
 
 
@@ -70,6 +80,12 @@ def configure_argparser() -> argparse.ArgumentParser:
         type=int,
         default=0,
         help="Select a model from the input file using its index, in case of multiple models.",
+    )
+
+    receptor_operations.add_argument(
+        "--add-missing-atoms",
+        action="store_true",
+        help="Add missing atoms using Modeller.",
     )
 
     args = parser.parse_args()
