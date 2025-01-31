@@ -1,6 +1,7 @@
 import io
 import logging
 import os
+import tempfile
 import warnings
 
 from Bio.PDB import PDBIO, PDBExceptions, PDBParser, Structure
@@ -111,6 +112,12 @@ class Receptor:
         self.current_file_stream = self.open_file_stream()
         self.output_fmt = output_fmt if output_fmt else self.file_ext.strip(".")
 
+    def set_file(self, file: str):
+        self.current_file_stream.close()
+        self.file = file
+        self.file_ext = os.path.splitext(file)[1]
+        self.current_file_stream = self.open_file_stream()
+
     def open_file_stream(self) -> io.TextIOWrapper:
         try:
             return open(self.file, "r")
@@ -142,6 +149,13 @@ class Receptor:
             e = f"Unsupported output format: {self.file_ext}"
             logging.error(e)
             raise ValueError(e)
+
+    def create_tmp_file(self, write_stream: bool = False) -> str:
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp_file = tmp.name
+            if write_stream:
+                self.write_and_close_file_stream(tmp_file)
+            return tmp_file
 
     def sanitize_file(self) -> None:
         """Sanitize the receptor file using biopython.
