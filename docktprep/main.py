@@ -1,7 +1,6 @@
 import argparse
 import os
 
-from docktprep.modeller_operations import AddMissingAtomsOperation, ModellerOperation
 from docktprep.receptor_parser import PDBSanitizerFactory, Receptor
 
 from .logs import configure_logging
@@ -25,15 +24,26 @@ def main():
     receptor.sanitize_file()
 
     # modeller operations
-    mdls = list()
-    if args.add_missing_atoms:
-        mdls.append(AddMissingAtomsOperation())
-
-    for mdl in mdls:
-        mdl.run_modeller(receptor)
+    receptor = modeller_operations(receptor, args)
 
     # write receptor to output file
     receptor.write_and_close_file_stream(args.output)
+
+
+def modeller_operations(receptor: Receptor, args: argparse.Namespace):
+    try:
+        from docktprep import modeller_operations
+    except ImportError:
+        raise ImportError(f"MODELLER is required to use this feature.")
+
+    mdlops = list()
+    if args.add_missing_atoms:
+        mdlops.append(modeller_operations.AddMissingAtomsOperation())
+
+    for mdlop in mdlops:
+        mdlop.run_modeller(receptor)
+
+    return receptor
 
 
 def configure_argparser() -> argparse.ArgumentParser:
@@ -85,7 +95,7 @@ def configure_argparser() -> argparse.ArgumentParser:
     receptor_operations.add_argument(
         "--add-missing-atoms",
         action="store_true",
-        help="Add missing atoms using Modeller.",
+        help="Add missing atoms using MODELLER (requires MODELLER installed).",
     )
 
     args = parser.parse_args()

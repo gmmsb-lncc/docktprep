@@ -8,6 +8,8 @@ from modeller.scripts import complete_pdb
 from .receptor_parser import Receptor
 from .stdout_manager import capture_output, suppress_output
 
+__all__ = ["ModellerOperation", "AddMissingAtomsOperation"]
+
 
 class ModellerOperation(Protocol):
     def run_modeller(self, receptor: Receptor) -> None: ...
