@@ -37,8 +37,13 @@ def modeller_operations(receptor: Receptor, args: argparse.Namespace):
         raise ImportError(f"MODELLER is required to use this feature.")
 
     mdlops = list()
-    if args.add_missing_atoms:
+    if args.add_missing_atoms and args.replace_nstd_res:
+        # this will also add missing atoms
+        mdlops.append(modeller_operations.ReplaceNonStdResiduesOperation())
+    elif args.add_missing_atoms:
         mdlops.append(modeller_operations.AddMissingAtomsOperation())
+    elif args.replace_nstd_res:
+        mdlops.append(modeller_operations.ReplaceNonStdResiduesOperation())
 
     for mdlop in mdlops:
         mdlop.run_modeller(receptor)
@@ -95,7 +100,13 @@ def configure_argparser() -> argparse.ArgumentParser:
     receptor_operations.add_argument(
         "--add-missing-atoms",
         action="store_true",
-        help="Add missing atoms using MODELLER (requires MODELLER installed).",
+        help="Add missing heavy and hydrogen atoms using MODELLER (requires MODELLER installed).",
+    )
+
+    receptor_operations.add_argument(
+        "--replace-nstd-res",
+        action="store_true",
+        help="Replace non-standard residues with their standard counterparts.",
     )
 
     args = parser.parse_args()
