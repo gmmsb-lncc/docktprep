@@ -1,5 +1,4 @@
 import argparse
-import os
 
 from docktprep.receptor_parser import PDBSanitizerFactory, Receptor
 
@@ -100,13 +99,13 @@ def configure_argparser() -> argparse.ArgumentParser:
     receptor_operations.add_argument(
         "--add-missing-atoms",
         action="store_true",
-        help="Add missing heavy and hydrogen atoms using MODELLER (requires MODELLER installed).",
+        help="Add missing heavy and hydrogen atoms (requires MODELLER).",
     )
 
     receptor_operations.add_argument(
         "--replace-nstd-res",
         action="store_true",
-        help="Replace non-standard residues with their standard counterparts.",
+        help="Replace non-standard residues with their standard counterparts (requires MODELLER).",
     )
 
     args = parser.parse_args()
