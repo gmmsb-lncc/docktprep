@@ -1,7 +1,5 @@
 import argparse
-import os
 
-from docktprep.pdbfixer_operations import *
 from docktprep.receptor_parser import PDBSanitizerFactory, Receptor
 
 from .logs import configure_logging
@@ -9,101 +7,108 @@ from .logs import configure_logging
 
 def main():
     args = configure_argparser()
-    configure_logging(args.log_output)
-    sanitizer = PDBSanitizerFactory(model_id=args.select_model)
+    configure_logging(args.log_file)
+
+    # receptor parsing
+    sanitizer = PDBSanitizerFactory(
+        model_id=args.sel_model,
+        remove_hetresi=args.remove_hetresi,
+        remove_water=args.remove_water,
+    )
+
     receptor = Receptor(
         args.receptor,
         sanitizer=sanitizer,
     )
-
-    fixer_ops = []
-    if args.add_missing_residues:
-        fixer_ops.append(AddMissingResidues())
-    if args.replace_non_standard:
-        fixer_ops.append(ReplaceNonStdResidues())
-    if args.add_missing_atoms:
-        fixer_ops.append(AddMissingHeavyAtoms())
-    if args.add_hydrogens:
-        fixer_ops.append(AddMissingHydrogens(ph=args.pH))
-
     receptor.sanitize_file()
-    receptor.fix_structure(fixer_ops)
+
+    # modeller operations
+    receptor = modeller_operations(receptor, args)
+
+    # write receptor to output file
     receptor.write_and_close_file_stream(args.output)
+
+
+def modeller_operations(receptor: Receptor, args: argparse.Namespace):
+    try:
+        from docktprep import modeller_operations
+    except ImportError:
+        raise ImportError(f"MODELLER is required to use this feature.")
+
+    mdlops = list()
+    if args.add_missing_atoms and args.replace_nstd_res:
+        # this will also add missing atoms
+        mdlops.append(modeller_operations.ReplaceNonStdResiduesOperation())
+    elif args.add_missing_atoms:
+        mdlops.append(modeller_operations.AddMissingAtomsOperation())
+    elif args.replace_nstd_res:
+        mdlops.append(modeller_operations.ReplaceNonStdResiduesOperation())
+
+    for mdlop in mdlops:
+        mdlop.run_modeller(receptor)
+
+    return receptor
 
 
 def configure_argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="DockTPrep: Create DockThor input files from PDB, mmCIF or MOL2 formats.",
+        description="DockTPrep: Prepare protein-ligand structures and create DockThor input files.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "-r",
         "--receptor",
-        help="Receptor file in PDB or mmCIF format.",
+        help="Receptor file in PDB format.",
         type=str,
         required=True,
     )
     parser.add_argument(
+        "-o",
         "--output",
         help="Output file name to save the prepared structure.",
         type=str,
         required=True,
     )
     parser.add_argument(
-        "--log-output",
+        "--log-file",
         type=str,
         help="Output file for logging.",
         default=None,
     )
-    receptor_operations = parser.add_argument_group("Receptor options")
+    receptor_operations = parser.add_argument_group("receptor options")
+
     receptor_operations.add_argument(
-        "--select-model",
-        metavar="MODEL_IDX",
+        "--remove-hetresi",
+        action="store_true",
+        help="Remove HETATM records.",
+    )
+
+    receptor_operations.add_argument(
+        "--remove-water",
+        action="store_true",
+        help="Remove water molecules.",
+    )
+
+    receptor_operations.add_argument(
+        "--sel-model",
         type=int,
         default=0,
-        help="Select a model from the input file, in case of multiple models.",
+        help="Select a model from the input file using its index, in case of multiple models.",
     )
-    # receptor_operations.add_argument(
-    #     "--convert-to-pdbx",
-    #     action="store_true",
-    #     help="Convert receptor input file to PDBx/mmCIF format.",
-    # )
-    receptor_operations.add_argument(
-        "--replace-non-standard",
-        action="store_true",
-        help="Replace non-standard residues with their standard counterparts.",
-    )
+
     receptor_operations.add_argument(
         "--add-missing-atoms",
         action="store_true",
-        help="Add missing heavy atoms to the structure.",
+        help="Add missing heavy and hydrogen atoms (requires MODELLER).",
     )
+
     receptor_operations.add_argument(
-        "--add-missing-residues",
+        "--replace-nstd-res",
         action="store_true",
-        help="Add missing residues to the structure based on SEQRES records.",
-    )
-    receptor_operations.add_argument(
-        "--add-hydrogens",
-        action="store_true",
-        help="Add missing hydrogen atoms to the structure using the specified pH.",
-    )
-    receptor_operations.add_argument(
-        "--pH",
-        type=float,
-        default=7.0,
-        help="pH value for adding missing hydrogen atoms to the receptor structure.",
+        help="Replace non-standard residues with their standard counterparts (requires MODELLER).",
     )
 
     args = parser.parse_args()
-
-    #
-    log_output_file = (
-        f"docktprep_{os.path.basename(args.receptor)}.log"
-        if args.log_output is None
-        else args.log_output
-    )
-    args.log_output = log_output_file
     return args
 
 
