@@ -79,7 +79,7 @@ class ReplaceNonStdResiduesOperation:
         receptor.current_file_stream = f_out
         return receptor
 
-    def prune_non_std_residues(
+    def change_and_prune_non_std_residues(
         self, receptor: Receptor, nstds_to_std: dict[str, str]
     ) -> Receptor:
         """Prune non-backbone atoms from non-standard residues."""
@@ -93,7 +93,7 @@ class ReplaceNonStdResiduesOperation:
 
         for residue in structure.get_residues():
             if residue.resname in nstds_to_std:
-                residue.resname = nstds_to_std[residue.resname]
+                residue.resname = nstds_to_std[residue.resname]  # change to standard
                 for atom in residue.child_list.copy():
                     if atom.name not in ["N", "CA", "C", "O"]:
                         residue.detach_child(atom.id)
@@ -113,7 +113,9 @@ class ReplaceNonStdResiduesOperation:
     def replace_non_std_residues(self, receptor: Receptor) -> None:
         complete_pdb = CompletePDBOperation()
         receptor = self.change_hetatm_to_atom(receptor, nonstd_residues.nstds_to_std)
-        receptor = self.prune_non_std_residues(receptor, nonstd_residues.nstds_to_std)
+        receptor = self.change_and_prune_non_std_residues(
+            receptor, nonstd_residues.nstds_to_std
+        )
         complete_pdb.run_modeller(receptor)  # reconstruct the missing atoms
 
     def run_modeller(self, receptor: Receptor) -> None:

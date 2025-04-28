@@ -93,7 +93,7 @@ def configure_argparser() -> argparse.ArgumentParser:
         "--sel-model",
         type=int,
         default=0,
-        help="Select a model from the input file using its index, in case of multiple models.",
+        help="Select a model from the input file using its index.",
     )
 
     receptor_operations.add_argument(
