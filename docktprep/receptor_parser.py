@@ -5,6 +5,8 @@ import tempfile
 import warnings
 
 from Bio.PDB import PDBIO, PDBExceptions, PDBParser, Structure
+from Bio.PDB.mmcifio import MMCIFIO
+from Bio.PDB.MMCIFParser import MMCIFParser
 from Bio.PDB.PDBIO import Select
 
 
@@ -99,7 +101,64 @@ class PDBSanitizerFactory:
         return sanitizer
 
 
+class FileFormatHandler:
+    ACCEPTED_FORMATS = {".pdb", ".cif"}
+
+    @staticmethod
+    def get_file_ext_full_name(ext: str) -> str:
+        """Return the full name of the file extension."""
+        ext = FileFormatHandler.normalize_ext(ext)
+        FileFormatHandler.validate_ext(ext)
+
+        ext_map = {
+            ".pdb": "PDB",
+            ".cif": "MMCIF",
+        }
+        return ext_map[ext]
+
+    @staticmethod
+    def validate_ext(ext: str) -> None:
+        """Validate that the extension is accepted."""
+        if ext not in FileFormatHandler.ACCEPTED_FORMATS:
+            e = f"Unsupported file extension: {ext}. Accepted: {', '.join(FileFormatHandler.ACCEPTED_FORMATS)}."
+            logging.error(e)
+            raise ValueError(e)
+
+    @staticmethod
+    def normalize_ext(ext: str) -> str:
+        """Normalize extension: keep leading dot, lowercase."""
+        if not ext.startswith("."):
+            ext = f".{ext}"
+        return ext.lower()
+
+    @staticmethod
+    def get_parser(ext: str):
+        """Return Biopython parser for the given file extension."""
+        ext = FileFormatHandler.normalize_ext(ext)
+        FileFormatHandler.validate_ext(ext)
+
+        parser_map = {
+            ".pdb": PDBParser(PERMISSIVE=True, QUIET=False),
+            ".cif": MMCIFParser(QUIET=False),
+        }
+        return parser_map[ext]
+
+    @staticmethod
+    def get_file_io(ext: str):
+        """Return Biopython file writer for the given extension."""
+        ext = FileFormatHandler.normalize_ext(ext)
+        FileFormatHandler.validate_ext(ext)
+
+        file_io_map = {
+            ".pdb": PDBIO(),
+            ".cif": MMCIFIO(),
+        }
+        return file_io_map[ext]
+
+
 class Receptor:
+    ACCEPTED_FORMATS = [".pdb", ".cif"]
+
     def __init__(
         self,
         file: str,
@@ -115,7 +174,6 @@ class Receptor:
     def set_file(self, file: str):
         self.current_file_stream.close()
         self.file = file
-        self.file_ext = os.path.splitext(file)[1]
         self.current_file_stream = self.open_file_stream()
 
     def open_file_stream(self) -> io.TextIOWrapper:
@@ -135,23 +193,18 @@ class Receptor:
         self.close_file_stream()
 
     def get_biopython_parser(self):
-        if self.file_ext == ".pdb":
-            return PDBParser(PERMISSIVE=True, QUIET=False)
-        else:
-            e = f"Unsupported file extension: {self.file_ext}"
-            logging.error(e)
-            raise ValueError(e)
+        return FileFormatHandler.get_parser(self.file_ext)
 
     def get_biopython_file_io(self, output_fmt: str = ""):
-        if output_fmt == "pdb":
-            return PDBIO()
-        else:
-            e = f"Unsupported output format: {self.file_ext}"
-            logging.error(e)
-            raise ValueError(e)
+        ext = (
+            FileFormatHandler.normalize_ext(output_fmt)
+            if output_fmt
+            else self.output_fmt
+        )
+        return FileFormatHandler.get_file_io(ext)
 
     def create_tmp_file(self, write_stream: bool = False) -> str:
-        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=self.file_ext) as tmp:
             tmp_file = tmp.name
             if write_stream:
                 self.write_and_close_file_stream(tmp_file)
@@ -181,4 +234,4 @@ class Receptor:
         file_io = self.get_biopython_file_io(self.file_ext.strip("."))
         file_io.set_structure(structure)
         sanitizer = self.sanitizer.create_sanitizer(structure)
-        file_io.save(self.current_file_stream, write_end=True, select=sanitizer)
+        file_io.save(self.current_file_stream, select=sanitizer)
