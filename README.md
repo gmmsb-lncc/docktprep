@@ -1,30 +1,54 @@
 # docktprep
-> ⚠️ Under development.
-
-Create DockThor input files from PDB, mmCIF and MOL2 formats. Prepare and fix common issues in the PDB files.
+Prepare and fix [Protein Data Bank (PDB)](https://pdb101.rcsb.org/learn/guide-to-understanding-pdb-data/beginner%E2%80%99s-guide-to-pdbx-mmcif) files for molecular modeling and docking.
 
 ## Installation
-Clone this repository:
-```
-git clone https://github.com/gmmsb-lncc/docktprep.git
-```
-
-Create a virtual environment and install the required dependencies:
-```
+Clone this repository, create a virtual environment and install the required dependencies:
+```bash
+# clone this repository...
 cd docktprep
-python3 -m venv env
+python3.12 -m venv env  # use python >=3.10 
 source env/bin/activate
 python -m pip install -r requirements.txt
 ```
 
 Run tests:
-```
+```bash
 python -m pytest -vs tests/ --log-cli-level=INFO 
 ```
 
 Run the app:
-```
+```bash
 python -m docktprep.main --help
 ```
+
+
+### MODELLER installation
+Some functionalities of this package depend on [MODELLER](https://salilab.org/modeller/), which is not included in this repository; you'll need to install it separately. Follow the [installation instructions](https://salilab.org/modeller/download_installation.html) on the official MODELLER website.
+
+> ⚠️ Once MODELLER is installed, you must create symbolic links to its files in the virtual environment’s site-packages directory to make the library available inside the venv.
+
+Find the location of the MODELLER installation (**`deactivate`** the virtual environment if it is active!):
+```bash
+
+MODELLER_PATH=$(python3.12 -c "import modeller, os; print(os.path.dirname(modeller.__file__))")
+```
+
+Reactivate the virtual environment and create symbolic links:
+```bash
+source env/bin/activate
+VENV_SITEPACKAGES=$(python -c "import site; print(site.getsitepackages()[0])")
+ln -s "$MODELLER_PATH" "$VENV_SITEPACKAGES/modeller"
+ln -s "$MODELLER_PATH/../_modeller.so" "$VENV_SITEPACKAGES/_modeller.so"
+```
+
+Test the installation:
+```bash
+python -c "import modeller; print(modeller.__version__)"
+```
+
+
+
+
+
 
 
