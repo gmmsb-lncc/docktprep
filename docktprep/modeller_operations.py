@@ -21,11 +21,13 @@ __all__ = [
 
 
 class ModellerOperation(Protocol):
-    def run_modeller(self, receptor: Receptor) -> None: ...
+    def run_modeller(self, receptor: Receptor, **kwargs) -> None: ...
 
 
 class CompletePDBOperation(ModellerOperation):
-    def run_modeller(self, receptor):
+    """Complete the PDB file by adding missing atoms and residues."""
+
+    def run_modeller(self, receptor: Receptor, transfer_res_num: bool = False) -> None:
         with suppress_output():
             env = Environ()
             env.libs.topology.read(file="$(LIB)/top_heav.lib")
@@ -38,7 +40,7 @@ class CompletePDBOperation(ModellerOperation):
             receptor_tmp_filled = receptor.create_tmp_file()
 
         with capture_output() as (out, err):
-            mdl = complete_pdb(env, receptor_tmp)
+            mdl = complete_pdb(env, receptor_tmp, transfer_res_num=transfer_res_num)
             mdl.write(file=receptor_tmp_filled)
         if out.getvalue():
             logging.warning(out.getvalue())
@@ -51,19 +53,20 @@ class CompletePDBOperation(ModellerOperation):
 
 
 class AddMissingAtomsOperation:
-    def run_modeller(self, receptor: Receptor) -> None:
+    """Add missing atoms (heavy atoms and hydrogens) to the PDB file."""
+
+    def run_modeller(self, receptor: Receptor, transfer_res_num: bool = False) -> None:
         complete_pdb = CompletePDBOperation()
-        complete_pdb.run_modeller(receptor)
+        complete_pdb.run_modeller(receptor, transfer_res_num=transfer_res_num)
 
 
 class ReplaceNonStdResiduesOperation:
+    """Replace non-standard residues with standard ones."""
+
     def change_hetatm_to_atom(
         self, receptor: Receptor, modified_res: dict[str, str]
     ) -> Receptor:
-        """Change HETATM to ATOM for non-standard residues.
-
-        This is required for MODELLER to work properly.
-        """
+        """Change HETATM to ATOM for non-standard residues; required for MODELLER."""
         f_out = io.StringIO()
         receptor.current_file_stream.seek(0)
         for line in receptor.current_file_stream:
@@ -110,13 +113,17 @@ class ReplaceNonStdResiduesOperation:
         file_io.save(receptor.current_file_stream, write_end=True)
         return receptor
 
-    def replace_non_std_residues(self, receptor: Receptor) -> None:
+    def replace_non_std_residues(
+        self, receptor: Receptor, transfer_res_num: bool = False
+    ) -> None:
         complete_pdb = CompletePDBOperation()
         receptor = self.change_hetatm_to_atom(receptor, nonstd_residues.nstds_to_std)
         receptor = self.change_and_prune_non_std_residues(
             receptor, nonstd_residues.nstds_to_std
         )
-        complete_pdb.run_modeller(receptor)  # reconstruct the missing atoms
+        complete_pdb.run_modeller(
+            receptor, transfer_res_num=transfer_res_num
+        )  # this also reconstructs the missing atoms
 
-    def run_modeller(self, receptor: Receptor) -> None:
-        self.replace_non_std_residues(receptor)
+    def run_modeller(self, receptor: Receptor, transfer_res_num: bool = False) -> None:
+        self.replace_non_std_residues(receptor, transfer_res_num)

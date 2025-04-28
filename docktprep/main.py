@@ -45,7 +45,7 @@ def modeller_operations(receptor: Receptor, args: argparse.Namespace):
         mdlops.append(modeller_operations.ReplaceNonStdResiduesOperation())
 
     for mdlop in mdlops:
-        mdlop.run_modeller(receptor)
+        mdlop.run_modeller(receptor, transfer_res_num=args.transfer_res_num)
 
     return receptor
 
@@ -75,6 +75,8 @@ def configure_argparser() -> argparse.ArgumentParser:
         help="Output file for logging.",
         default=None,
     )
+
+    # receptor operations
     receptor_operations = parser.add_argument_group("receptor options")
 
     receptor_operations.add_argument(
@@ -82,30 +84,31 @@ def configure_argparser() -> argparse.ArgumentParser:
         action="store_true",
         help="Remove HETATM records.",
     )
-
     receptor_operations.add_argument(
         "--remove-water",
         action="store_true",
         help="Remove water molecules.",
     )
-
     receptor_operations.add_argument(
         "--sel-model",
         type=int,
         default=0,
         help="Select a model from the input file using its index.",
     )
-
     receptor_operations.add_argument(
         "--add-missing-atoms",
         action="store_true",
         help="Add missing heavy and hydrogen atoms (requires MODELLER).",
     )
-
     receptor_operations.add_argument(
         "--replace-nstd-res",
         action="store_true",
         help="Replace non-standard residues with their standard counterparts (requires MODELLER).",
+    )
+    receptor_operations.add_argument(
+        "--transfer-res-num",
+        action="store_true",
+        help="Retains the residue numbering from the original PDB (MODELLER).",
     )
 
     args = parser.parse_args()
