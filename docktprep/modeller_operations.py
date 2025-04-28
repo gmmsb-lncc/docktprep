@@ -9,7 +9,7 @@ from modeller import *
 from modeller.scripts import complete_pdb
 
 from . import nonstd_residues
-from .receptor_parser import Receptor
+from .receptor_parser import FileFormatHandler, Receptor
 from .stdout_manager import capture_output, suppress_output
 
 __all__ = [
@@ -41,7 +41,12 @@ class CompletePDBOperation(ModellerOperation):
 
         with capture_output() as (out, err):
             mdl = complete_pdb(env, receptor_tmp, transfer_res_num=transfer_res_num)
-            mdl.write(file=receptor_tmp_filled)
+            mdl.write(
+                file=receptor_tmp_filled,
+                model_format=FileFormatHandler.get_file_ext_full_name(
+                    receptor.output_fmt
+                ),
+            )
         if out.getvalue():
             logging.warning(out.getvalue())
         if err.getvalue():
@@ -110,7 +115,7 @@ class ReplaceNonStdResiduesOperation:
 
         file_io = receptor.get_biopython_file_io(receptor.file_ext.strip("."))
         file_io.set_structure(structure)
-        file_io.save(receptor.current_file_stream, write_end=True)
+        file_io.save(receptor.current_file_stream)
         return receptor
 
     def replace_non_std_residues(

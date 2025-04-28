@@ -58,7 +58,7 @@ def configure_argparser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-r",
         "--receptor",
-        help="Receptor file in PDB format.",
+        help="Receptor file.",
         type=str,
         required=True,
     )
