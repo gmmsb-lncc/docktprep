@@ -23,9 +23,11 @@ mypy-extensions==1.0.0
 nest-asyncio==1.6.0
 numpy==2.2.1
 packaging==24.2
+pandas==2.2.3
 parso==0.8.4
 pathspec==0.12.1
 pexpect==4.9.0
+pipdeptree==2.26.1
 platformdirs==4.3.6
 pluggy==1.5.0
 prompt_toolkit==3.0.48
@@ -35,6 +37,7 @@ pure_eval==0.2.3
 Pygments==2.19.1
 pytest==8.3.4
 python-dateutil==2.9.0.post0
+pytz==2025.2
 PyYAML==6.0.2
 pyzmq==26.2.0
 referencing==0.35.1
@@ -42,8 +45,9 @@ requests==2.32.3
 rpds-py==0.22.3
 six==1.17.0
 stack-data==0.6.3
-tornado==6.4.2
+tornado==6.5
 traitlets==5.14.3
+tzdata==2025.2
 urllib3==2.3.0
 wcwidth==0.2.13
 xmltodict==0.14.2
