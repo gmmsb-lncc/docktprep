@@ -1,6 +1,7 @@
 import argparse
 
 from docktprep.receptor_parser import PDBSanitizerFactory, Receptor
+from docktprep.receptor_mmff94s import write_topology
 
 from .logs import configure_logging
 
@@ -24,6 +25,9 @@ def main():
 
     # modeller operations
     receptor = modeller_operations(receptor, args)
+
+    # write topology file
+    write_topology(receptor, args.output)
 
     # write receptor to output file
     receptor.write_and_close_file_stream(args.output)
